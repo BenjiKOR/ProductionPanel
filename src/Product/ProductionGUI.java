@@ -1,19 +1,24 @@
 package Product;
 
 import javax.swing.*;
-import java.awt.*;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Timer;
 import java.util.TimerTask;
 
 public class ProductionGUI {
-    Font boldFont = new Font(Font.SANS_SERIF, Font.BOLD, 14);
-    private int productionCount = 0; // 생산된 수량
+    ProductionPlan productionPlan = new ProductionPlan();
+    int planListLength = productionPlan.getPlanLength().toArray().length;
+
+    final int[] i = {0};
+    final int[] j = {1};
+
     private int inputCount = 0;      // 투입수량
     private int assemblyCount = 0; // 조립공정 수량
-    private int objectCount = ProductionPlan.countProduction[0]; // 목표 수량
-    private int resultCount = objectCount - productionCount; // 생산 실적
+    private int packingcount = 0; // 포장공정 수량
+    private final int objectQty = productionPlan.calculateObjectQty();// 목표 수량
+    private int productionCount = 0; // 생산된 수량
+    private int resultCount = objectQty - productionCount; // 생산 실적
 
     private JLabel productionLabel;
     private JLabel resultLabel;
@@ -21,25 +26,46 @@ public class ProductionGUI {
 
 
     public void gui() {
-
         frameLabel();
 
-        // Timer
         Timer timer = new Timer();
-
-        // 1. 제품 투입 (1초마다 실행)
+        int interval = 500;
         timer.schedule(new TimerTask() {
             @Override
             public void run() {
-                productionCount++;
-                productionLabel.setText("생산완료 수량: " + productionCount);
-                resultArea.append(getTimestamp() + " 생산 완료\n");
+                if (i[0] >= planListLength) {
+                    timer.cancel();
+                    return;
+                }
 
-                //실적 변경
-                resultLabel.setText("남은수량: " + (objectCount-productionCount));
+                if (j[0] <= productionPlan.getPlannedQty(i[0])) {
+                    resultUpdate();
+                    productionCount++;
+                    resultCount = objectQty - productionCount;
+                    productionCountUpdate();
+                    resultCountUpdate();
+                    j[0]++;
+                } else if (j[0] > productionPlan.getPlannedQty(i[0])) {
+                    j[0] = 1;
+                    i[0]++;
+                }
+
             }
-        }, 0, 1000);
+        }, 0, interval);
     }
+
+    private void resultUpdate() {
+        resultArea.append(getTimestamp() + productionPlan.getModelSerialNum(i[0]) + "생산 완료\n");
+    }
+
+    private void productionCountUpdate() {
+        productionLabel.setText("생산수량: " + productionCount);
+    }
+
+    private void resultCountUpdate() {
+        resultLabel.setText("남은수량: " + resultCount);
+    }
+
 
     private void frameLabel() {
         // JFrame 설정
@@ -49,6 +75,10 @@ public class ProductionGUI {
         frame.setLayout(null);
 
         // 수량 표시 라벨
+        JLabel qtyLabel = new JLabel("[공정별 현황]", SwingConstants.LEFT);
+        qtyLabel.setBounds(50, 30, 400, 30);
+        qtyLabel.setFont(FontSet.bold);
+
         JLabel inputLabel = new JLabel("투입 수량: " + inputCount);
         inputLabel.setBounds(50, 50, 200, 30);
 
@@ -58,7 +88,7 @@ public class ProductionGUI {
         productionLabel = new JLabel("생산완료 수량: " + productionCount);
         productionLabel.setBounds(50, 90, 200, 30);
 
-        JLabel objectLabel = new JLabel("목표수량: " + objectCount);
+        JLabel objectLabel = new JLabel("목표수량: " + objectQty);
         objectLabel.setBounds(50, 110, 200, 30);
 
         resultLabel = new JLabel("남은수량: " + resultCount);
@@ -67,7 +97,7 @@ public class ProductionGUI {
         // 실적log
         JLabel resultLogLabel = new JLabel("[생산현황]", SwingConstants.LEFT);
         resultLogLabel.setBounds(50, 170, 400, 30);
-        resultLogLabel.setFont(boldFont);
+        resultLogLabel.setFont(FontSet.bold);
 
         resultArea = new JTextArea();
         resultArea.setBounds(50, 200, 400, 200);
@@ -75,24 +105,30 @@ public class ProductionGUI {
         JScrollPane resultScroll = new JScrollPane(resultArea);
         resultScroll.setBounds(50, 200, 400, 200);
 
-        ProductionPlan productionPlan = new ProductionPlan();
+        JLabel productionPlanLabel = new JLabel("[금일 생산계획]", SwingConstants.LEFT);
+        productionPlanLabel.setBounds(50, 400, 400, 30);
+        productionPlanLabel.setFont(FontSet.bold);
         productionPlan.guiProductionPlan(); // 생산계획 log
 
         // 구성 요소 추가
+        frame.add(qtyLabel);
         frame.add(inputLabel);
         frame.add(assemblyLabel);
         frame.add(productionLabel);
         frame.add(objectLabel);
         frame.add(resultLabel);
-        frame.add(resultScroll); // 생산현황판
+        // 생산현황판
+        frame.add(resultScroll);
         frame.add(resultLogLabel);
-        frame.add(productionPlan.planScroll); // 생산계획 스크롤
+        //생산계획
+        frame.add(productionPlanLabel);
+        frame.add(productionPlan.planScroll);
 
-        // 창 보이기
+        // 창 활성화
         frame.setVisible(true);
     }
         private String getTimestamp () {
-            SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss");
+            SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss ");
             return sdf.format(new Date());
         }
     }

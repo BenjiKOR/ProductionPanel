@@ -7,7 +7,7 @@ public class InvoiceMain {
         InfoMessage infoMessage = new InfoMessage(materialList); // 입력 안내문 클래스
         Invoice invoice = new Invoice(materialList); // 자재수령 클래스
         Inventroy inventroy = new Inventroy(materialList); // 재고확인 클래스
-        ProdcutionPlan prodcutionPlan = new ProdcutionPlan(materialList); // 생산계획 클래스
+//        ProdcutionPlan prodcutionPlan = new ProdcutionPlan(materialList); // 생산계획 클래스
 
 
         while (true) {
@@ -21,7 +21,7 @@ public class InvoiceMain {
                     inventroy.inventoryStatus();
                     break;
                 case 3:
-                    prodcutionPlan.todayPlan();
+//                    prodcutionPlan.todayPlan();
                     break;
                 case 4:
                     System.out.println(infoMessage.red + "프로그램을 종료합니다." + infoMessage.resetText);
